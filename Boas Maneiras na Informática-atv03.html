@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boas Maneiras - Profª Adriana Bett Terebinto</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #2196F3;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --bg: #eaf4ff;
+        }
+
+        body, html { 
+            height: 100%; margin: 0; overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg);
+        }
+
+        /* Cabeçalho de Identificação */
+        .header-prof {
+            background: var(--primary); color: white;
+            padding: 8px 20px; font-size: 0.9rem;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .main-wrapper {
+            display: flex; flex-direction: column; align-items: center;
+            height: calc(100vh - 70px); padding: 10px; box-sizing: border-box;
+        }
+
+        .card {
+            background: white; padding: 15px 20px; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 95%; max-width: 800px;
+            display: flex; flex-direction: column; height: 100%;
+        }
+
+        h2 { font-size: 1.2rem; margin: 0 0 10px 0; color: var(--primary); text-align: center; }
+
+        /* Lista de Questões */
+        #questions-container {
+            flex-grow: 1; overflow-y: auto; padding-right: 10px;
+        }
+
+        .question-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 6px; border-bottom: 1px solid #eee; gap: 10px;
+        }
+
+        .q-text { font-size: 0.95rem; flex-grow: 1; color: #333; font-weight: 500; }
+        .q-img { font-size: 1.8rem; min-width: 45px; text-align: center; }
+
+        .btn-group { display: flex; gap: 8px; }
+
+        .opt-btn {
+            padding: 8px 15px; border: 2px solid #ddd; border-radius: 8px;
+            background: #f9f9f9; cursor: pointer; font-weight: bold;
+            transition: 0.2s; font-size: 0.9rem;
+        }
+        
+        .selected { background-color: var(--accent) !important; color: white !important; border-color: var(--primary) !important; }
+
+        .btn-finalizar {
+            background-color: var(--success); color: white; padding: 12px;
+            border: none; border-radius: 10px; font-weight: bold;
+            cursor: pointer; font-size: 1.1rem; margin-top: 10px; width: 100%;
+            transition: transform 0.2s;
+        }
+        .btn-finalizar:hover { transform: scale(1.01); background-color: #27ae60; }
+
+        /* ESTILO DO POP-UP (MODAL) */
+        #modal-result {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white; padding: 30px; border-radius: 25px;
+            text-align: center; max-width: 450px; width: 85%;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4); animation: popScale 0.3s ease;
+        }
+
+        @keyframes popScale { from {transform: scale(0.7); opacity: 0;} to {transform: scale(1); opacity: 1;} }
+
+        .nota-titulo { color: var(--primary); font-size: 1.2rem; margin: 0; }
+        .nota-valor { font-size: 6rem; font-weight: 900; margin: 10px 0; line-height: 1; }
+        .relatorio-lista { 
+            text-align: left; background: #f8f9fa; padding: 10px; 
+            border-radius: 10px; font-size: 0.85rem; max-height: 150px; overflow-y: auto;
+            margin: 15px 0; border: 1px solid #ddd;
+        }
+
+        .btn-fechar {
+            background: var(--primary); color: white; border: none;
+            padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold;
+        }
+
+        .footer-id { text-align: center; font-size: 0.75rem; color: #7f8c8d; padding: 5px; background: white; border-top: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+<div class="header-prof">
+    <span>Informática: Regras de Convivência</span>
+    <span><strong>PROFª ADRIANA BETT TEREBINTO</strong></span>
+</div>
+
+<div class="main-wrapper">
+    <div class="card">
+        <h2>🖥️ Verdadeiro (V) ou Falso (F)?</h2>
+        
+        <div id="questions-container">
+            </div>
+
+        <button class="btn-finalizar" onclick="finalizarAtividade()">📊 VER MINHA NOTA FINAL</button>
+    </div>
+</div>
+
+<div class="footer-id">
+    Identificação: Material Pedagógico - Profª Adriana Bett Terebinto © 2024
+</div>
+
+<div id="modal-result">
+    <div class="modal-content">
+        <h3 class="nota-titulo">Sua Nota Final</h3>
+        <div id="display-nota" class="nota-valor">0</div>
+        <p id="feedback-texto" style="font-weight: bold; color: #555;"></p>
+        
+        <div class="relatorio-lista" id="relatorio-detalhado"></div>
+        
+        <p style="font-size: 0.8rem; color: var(--primary); font-weight: bold; margin-bottom: 15px;">
+            Profª Adriana Bett Terebinto
+        </p>
+        <button class="btn-fechar" onclick="location.reload()">RECOMEÇAR ATIVIDADE</button>
+    </div>
+</div>
+
+<script>
+    const allQuestions = [
+        {img:"🍔", text:"Podemos lanchar enquanto usamos o computador.", answer:false},
+        {img:"🙋‍♂️", text:"Devo levantar a mão para pedir ajuda ao professor.", answer:true},
+        {img:"🔌", text:"Não é seguro mexer nos fios e tomadas.", answer:true},
+        {img:"💧", text:"Líquidos podem estragar o teclado e o mouse.", answer:false},
+        {img:"🖱️", text:"O mouse deve ser usado com suavidade e carinho.", answer:true},
+        {img:"😡", text:"Posso dar tapas no monitor se o jogo travar.", answer:false},
+        {img:"🧼", text:"Mãos limpas ajudam a conservar o computador.", answer:true},
+        {img:"🪑", text:"Sentar de forma correta evita dores nas costas.", answer:true},
+        {img:"🔊", text:"Gritar no laboratório atrapalha os outros colegas.", answer:false},
+        {img:"👀", text:"Prestar atenção na aula ajuda a aprender mais.", answer:true}
+    ];
+
+    const container = document.getElementById("questions-container");
+    let userAnswers = new Array(allQuestions.length).fill(null);
+
+    allQuestions.forEach((q, index) => {
+        const div = document.createElement("div");
+        div.className = "question-row";
+        div.innerHTML = `
+            <div class="q-img">${q.img}</div>
+            <div class="q-text">${index + 1}. ${q.text}</div>
+            <div class="btn-group">
+                <button id="v-${index}" class="opt-btn" onclick="selecionar(${index}, true)">V</button>
+                <button id="f-${index}" class="opt-btn" onclick="selecionar(${index}, false)">F</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+
+    function selecionar(qIndex, val) {
+        userAnswers[qIndex] = val;
+        document.getElementById(`v-${qIndex}`).classList.remove('selected');
+        document.getElementById(`f-${qIndex}`).classList.remove('selected');
+        const btnId = val ? `v-${qIndex}` : `f-${qIndex}`;
+        document.getElementById(btnId).classList.add('selected');
+    }
+
+    function finalizarAtividade() {
+        if (userAnswers.includes(null)) {
+            alert("⚠️ Atenção: Responda todas as perguntas primeiro!");
+            return;
+        }
+
+        let nota = 0;
+        let listaHTML = "";
+
+        allQuestions.forEach((q, i) => {
+            if (userAnswers[i] === q.answer) {
+                nota++;
+                listaHTML += `<div style="color:green">Questão ${i+1}: ✅ Correto</div>`;
+            } else {
+                listaHTML += `<div style="color:red">Questão ${i+1}: ❌ Incorreto</div>`;
+            }
+        });
+
+        // Configura o Pop-up
+        const modal = document.getElementById("modal-result");
+        const displayNota = document.getElementById("display-nota");
+        const feedbackTxt = document.getElementById("feedback-texto");
+        const relatorio = document.getElementById("relatorio-detalhado");
+
+        displayNota.innerText = nota;
+        relatorio.innerHTML = listaHTML;
+
+        // Cores da Nota
+        if(nota >= 8) { displayNota.style.color = "#2ecc71"; feedbackTxt.innerText = "🌟 Parabéns! Você é nota 10!"; }
+        else if(nota >= 5) { displayNota.style.color = "#f1c40f"; feedbackTxt.innerText = "👍 Muito bem! Continue cuidando do PC!"; }
+        else { displayNota.style.color = "#e74c3c"; feedbackTxt.innerText = "📚 Vamos revisar as boas maneiras?"; }
+
+        modal.style.display = "flex";
+    }
+</script>
+
+</body>
+</html>
